@@ -1,0 +1,11 @@
+[Unit]
+Description=Script to gather docker metrics to logs
+After=network.target
+
+[Service]
+ExecStart=/home/ubuntu/config/docker_stats.sh
+Restart=always
+TimeoutStopSec=3
+
+[Install]
+WantedBy=multi-user.target
