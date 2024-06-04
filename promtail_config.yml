@@ -1,0 +1,51 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://3.121.77.213:3100/loki/api/v1/push
+
+scrape_configs:
+- job_name: varlogs
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: varlogs
+      env: infra
+      node: worker-1
+      app: preppeak
+      __path__: /var/log/*log
+
+- job_name: docker-logs
+  docker_sd_configs:
+    - host: unix:///var/run/docker.sock
+      refresh_interval: 5s
+  relabel_configs:
+    - source_labels: ['__meta_docker_container_name']
+      regex: '^\/([a-z-0-9]+_[a-z-]+)\.[0-9]+\..*$'
+      target_label: 'container_name'
+      replacement: '$1'
+    - target_label: 'job'
+      replacement: 'docker-logs'
+    - target_label: 'env'
+      replacement: prod
+    - target_label: 'node'
+      replacement: worker-1
+    - target_label: 'app'
+      replacement: preppeak
+
+- job_name: docker-stats
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: docker-stats
+      env: prod
+      node: worker-1
+      app: preppeak
+      __path__: /var/log/docker-stats/docker.stats.log
+
